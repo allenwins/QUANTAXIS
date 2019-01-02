@@ -3,7 +3,15 @@
 <!-- TOC -->
 
 - [QUANTAXIS 更新纪要](#quantaxis-更新纪要)
-    - [1.1.7 (unreleased)](#117-unreleased)
+    - [1.2.4 ](#124)
+    - [1.2.3 ](#123)
+    - [1.2.2 ](#122)
+    - [1.2.1 ](#121)
+    - [1.2.0](#120)
+    - [1.1.10](#1110)
+    - [1.1.9](#119)
+    - [1.1.8](#118)
+    - [1.1.7](#117)
     - [1.1.6](#116)
     - [1.1.5](#115)
     - [1.1.4.dev1](#114dev1)
@@ -63,11 +71,137 @@
     - [1.0.25](#1025)
 
 <!-- /TOC -->
-## 1.1.7 (unreleased)
+## 1.2.5
+
+1. 对于QA.QA_util_code_tostr 增加 原先为list类型的支持 现在支持自动补全的  int/list/str 类型转 str
+
+
+## 1.2.4
+
+1. 修复保证金的bug
+
+PS: 真丢人 年末写个bug 2333
+
+
+## 1.2.3 
+
+1. 感谢@追梦, QA_Account的receive_simpledeal的成交方式中的 股票市场的印花税计算修正
+2. 改写@地下的地下铁, 修正QA_Risk中计算assets的一个停牌无数据的bug
+3. 感谢@风筝 修复了单标的多市场的获取bug
+4. 重大修改:  增加保证金账户的支持(期货)
+
+
+具体示例  参见: https://github.com/QUANTAXIS/QUANTAXIS/blob/master/EXAMPLE/test_backtest/FUTURE/TEST_%E4%BF%9D%E8%AF%81%E9%87%91%E8%B4%A6%E6%88%B7.ipynb
+
+```python
+#在QA_Account的初始化的时候带上 allow_margin=True
+
+acc=QA.QA_Account(allow_sellopen=True,init_cash=10000,allow_t0=True,allow_margin=True,account_cookie='future_test',market_type=QA.MARKET_TYPE.FUTURE_CN,frequence=QA.FREQUENCE.FIFTEEN_MIN)
+
+
+
+#快速撮合接口的测试
+
+acc.reset_assets(init_cash=10000)
+
+acc.receive_simpledeal(code='RB1901', trade_price=3420, trade_amount=1, trade_towards=QA.ORDER_DIRECTION.BUY_OPEN, trade_time='2018-12-28 09:30:00')
+
+acc.receive_simpledeal(code='RB1901', trade_price=3425, trade_amount=1, trade_towards=QA.ORDER_DIRECTION.SELL_CLOSE, trade_time='2018-12-28 09:45:00')
+
+acc.receive_simpledeal(code='RB1901', trade_price=3435, trade_amount=1, trade_towards=QA.ORDER_DIRECTION.SELL_OPEN, trade_time='2018-12-28 09:55:00')
+
+acc.receive_simpledeal(code='RB1901', trade_price=3420, trade_amount=1, trade_towards=QA.ORDER_DIRECTION.BUY_CLOSE, trade_time='2018-12-28 10:45:00')
+
+acc.history_table
+"""
+datetime	code	price	amount	cash	order_id	realorder_id	trade_id	account_cookie	commission	tax	message
+0	2018-12-28 09:30:00	RB1901	3420	1	6918.580	None	None	None	future_test	3.420	0	None
+1	2018-12-28 09:45:00	RB1901	3425	-1	10038.155	None	None	None	future_test	3.425	0	None
+2	2018-12-28 09:55:00	RB1901	3435	-1	6943.220	None	None	None	future_test	3.435	0	None
+3	2018-12-28 10:45:00	RB1901	3420	1	10166.300	None	None	None	future_test	3.420	0	None
+"""
+acc.frozen
+"""
+{'RB1901': {2: {'money': 0, 'amount': 0}, -2: {'money': 0, 'amount': 0}}}
+"""
+```
+
+## 1.2.2
+
+1. 重新构建docker compose，把主镜像拆分jupyter, cron和web三个镜像
+2. 修改了QAFetch的mongo查询语句(感谢几何大佬) 优雅的在查询中去掉了_id  
+3. 修正期货的DataStruct格式,统一volume字段
+4. 更新交易日历到2019-12-31
+
+```
+mongo文档参见 https://docs.mongodb.com/manual/tutorial/project-fields-from-query-results/#return-the-specified-fields-and-the-id-field-only
+```
+
+
+## 1.2.1
+
+1. 修改回测的时候的账户结算(终于算对了不容易...) @CODE-ORANGE
+具体看 [期货冻结-释放资金示例](https://github.com/QUANTAXIS/QUANTAXIS/blob/master/EXAMPLE/test_backtest/FUTURE/%E6%9C%9F%E8%B4%A7TEST.ipynb)
+2. 增加 对于单月合约的存储  save future_all/ future_day_all / future_min_all
+3. 增加对于future_data 的获取的去重处理
+4. @barretthugh 修改了复权部分的代码
+5. 优化了docker部分的使用
+6. 增加对于jqdata的使用示例
+7. 增加了1min的股票采样
+8. 增加CTPtick的获取和采样
+
+## 1.2.0
+
+1. 增加对期货保证金冻结的修改
+2. 增加对于TALIB的支持, 在talib_indicators中调用
+3. 增加对于50ETF的支持
+4. 优化cirrusCI的支持
+
+
+## 1.1.10
+
+1. 减少了一个深圳主站的服务器ip
+2. 优化精简无用代码
+3. 删除pymssql依赖
+4. 优化了实盘易broker的一个小bug
+5. 添加bitmex数据下载
+6. 增加期权部分的列表等修改
+7. 增加了命令行操作
+8. 增加了分布式worker quantaxis_run (单独更新[QUANTAXIS/QUANTAXIS_RUN](https://github/quantaxis/quantaxis_run))
+9. QAWEB 单独拆分成独立项目 [QUANTAXIS/QUANTAXIS_WEBSERVER](https://github.com/QUANTAXIS/QUANTAXIS_WEBSERVER)
+
+## 1.1.9
+
+为1.1.8的released版本
+
+## 1.1.8
+
+1. 增加了商品期权的分钟线获取
+2. 优化了QA_Account的存储
+3. 修复了QA_PortfolioView的bug
+4. DataStruct 增加了 rolling(N), ndarray的方法
+5. QAWEB增加对策略的存储功能
+6. QADataStruct增加get_data函数,方便获取各种格式的数据
+7. QADataStruct增加 apply函数 方便对自己应用函数
+8. 增加了对于QA_Performance插件中先卖后买算差价的支持
+9. QAMarket=QAShipaneBroker 支持通达信模拟客户端
+10. QAIndicator 增加Talib的形态识别指标
+11. 增加了qarun.exe 直接运行策略,实时输出
+12. QAWEB 增加了/command/run?command=xxxx的命令行
+13. QAWeb 增加了一个socket端口 /command/runbacktest
+
+不兼容修改:
+
+QAWeb 中/accounts/all 返回值修改 为list(之前是dict)
+
+[released] 版本的版本号记错了 实际为1.1.9
+
+## 1.1.7 
 
 1. 优化 QA_DataStruct_future_day/min
 2. 增加了QA_fetch_xxx_adv系列中的  QA_fetch_future_day_adv/QA_fetch_future_min_adv函数
-
+3. 增加了QA_DataStruct的reindex方法, 方便从指标中提取部分行情
+4. 增加了商品期权的支持
 
 to do:
 
